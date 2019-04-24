@@ -198,15 +198,15 @@ var _CoreMap = function() {
 //			})
 //		}); 
 		
-		mapLayers[4] = new ol.layer.Tile({
-			source: new ol.source.XYZ({
-				tileSize: 256,
-				url:'/Sample/tiles10/Mapnik/{z}/{x}/{y}.png',
-				projection:'EPSG:3857',
-				crossOrigin: 'Anonymous'
-			}),
-			extent: [14188840,4348183, 14196279,4355325]
-		}); 
+//		mapLayers[4] = new ol.layer.Tile({
+//			source: new ol.source.XYZ({
+//				tileSize: 256,
+//				url:'/Sample/tiles10/Mapnik/{z}/{x}/{y}.png',
+//				projection:'EPSG:3857',
+//				crossOrigin: 'Anonymous'
+//			}),
+//			extent: [14188840,4348183, 14196279,4355325]
+//		}); 
 		
 		var admnsDstrcLayers = createTileLayer(layerInfos);
 		
