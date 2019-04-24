@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<meta http-equiv="X-UA-Compatible" content="IE=9" />
+
+<title>데모</title>
+
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"></link>
+<link rel="stylesheet" href="./css/BasicSet.css"></link>
+<link rel="stylesheet" href="./css/gis.css"></link>
+
+<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+
+<link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css"></link>
+
+
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=fetch,requestAnimationFrame,Element.prototype.classList,URL"></script>
+
+<script src="./js/lib/jquery-1.11.2.min.js"></script>
+<script src="./js/lib/jquery-ui.min.js"></script>
+	
+<script src="./js/lib/mapEventBus.js"></script>
+<script src="./js/lib/vworldLayer.js"></script>
+<script src="./js/lib/vworldAPI.js"></script>
+<script src="./js/lib/daumAPI.js"></script>
+
+<script src="./js/lib/mapService.js"></script>
+<script src="./js/lib/proj4.js"></script>
+<script src="./js/lib/coreMap.js"></script>
+
+
+<script type="text/javascript">
+	function searchVworld() {
+
+		var keyword = $("#keyword").val();
+		if (keyword == null || keyword == '') {
+			alert('검색어를 입력하세요.');
+			return;
+		}
+		_VWorldAPI.searchAll({query:keyword}).then(function(placeResult, roadResult, parcelResult) {
+			
+			var html = '<tr> <th>주소</th> </tr>';
+			
+			if(parseInt(placeResult[0].response.record.total) > 0){
+				
+				for(var i=0; i<placeResult[0].response.result.items.length; i++){
+					if(i> 10){
+						break;
+					}
+					var item = placeResult[0].response.result.items[i];
+					
+					html+= '<tr> <td coord=\''+JSON.stringify(item.point) +'\' class="moveTo"> '+item.address.road+'</td> </tr>';
+				}
+			}
+			
+			if(parseInt(roadResult[0].response.record.total) > 0){
+				for(var i=0; i<roadResult[0].response.result.items.length; i++){
+					if(i> 10){
+						break;
+					}
+					var item = roadResult[0].response.result.items[i];
+					
+					html+= '<tr> <td coord=\''+JSON.stringify(item.point) +'\' class="moveTo">'+item.address.road+'</td> </tr>';
+				}
+			}
+// 			if(parcelResult[0].response.result.items){
+				
+// 				for(var i=0; i<parcelResult[0].response.result.items.length; i++){
+// 					if(i> 10){
+// 						break;
+// 					}
+// 					var item = parcelResult[0].response.result.items[i];
+					
+// 					html+= '<tr> <td coord=\''+JSON.stringify(item.point) +'\' class="moveTo">'+item.address.road+'</td> </tr>';
+// 				}
+// 			}
+			
+			var total = parseInt(placeResult[0].response.record.total);
+			total += parseInt(roadResult[0].response.record.total);
+// 			total += parseInt(parcelResult[0].response.record.total);
+			
+			$('#vworldResult').html('총 조회건수 : ' + total);
+			
+			$('#vworldResultTable').html(html);
+			
+			$('.moveTo').off('click').on('click', function(){
+				
+				var coord = JSON.parse($(this).attr('coord'));
+				_CoreMap.centerMap(coord.x, coord.y, 15);
+				
+			});
+		});
+		
+		_DaumAPI.searchPlace({query:keyword}).then(function(result){
+			var total = result.meta.total_count;
+			
+			var html = '<tr><th>명칭</th> <th>주소</th> </tr>';
+			for(var i=0; i<result.documents.length; i++){
+				var item = result.documents[i];
+				
+				html+= '<tr>  <td>'+item.place_name+'</td><td coord=\'{"x":'+item.x+', "y":'+item.y +'}\' class="moveTo">'+item.road_address_name+'</td>  </tr>';
+			}
+			
+			$('#daumResult').html('총 조회건수 : ' + total);
+			
+			$('#daumResultTable').html(html);
+			
+			$('.moveTo').off('click').on('click', function(){
+				
+				var coord = JSON.parse($(this).attr('coord'));
+				_CoreMap.centerMap(coord.x, coord.y, 15);
+				
+			});
+			 
+		});
+	}
+	
+	$(document).ready(function(){
+		_CoreMap.init('map', {satellite: true, save:true, print: true, measure: true});
+	});
+	
+	$(window).on('resize', function(){
+    	
+    	var w = $(window).width();
+    	var h = $(window).height();
+		
+		$('body').width(w);
+		$('body').height(h);
+		
+    });
+	
+</script>
+</head>
+
+<body style="overflow-x: hidden; overflow-y: hidden; background-image: none; width:100%; height:100%;">
+	<div id="map" class="map">
+		<div class="popup_situReceive"
+			style="padding: 15px 0; position: absolute; top:10px; left:50px; z-index:1000;">
+			<fieldset class="first">
+				<div style="float: right;">
+					<table id="" class="dataTable" style="width: 100%; float: left;">
+						<colgroup>
+							<col width="120px"></col>
+							<col></col>
+						</colgroup>
+						<tbody>
+							<tr>
+								<th scope="row">명칭</th>
+								<td><input type="text" id="keyword" name="keyword" style="width: 300px; background-color: #f2f2f2;"  onkeypress="javascript:if(event.keyCode == 13){searchVworld();};" /></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</fieldset>
+		</div>
+		
+		<div class="w3-container" style="z-index:1000; position: absolute; top:70px; left: 10px">
+		  <h2>VWorld 검색결과</h2>
+		  <h5 id="vworldResult"></h5>
+		  <div style="height:200px; overflow-y:auto;">
+			  <table class="w3-table-all" id="vworldResultTable">
+		  	</table>
+		  </div>
+		</div>
+		<div class="w3-container" style="z-index:1000; position: absolute; top: 480px;">
+		  <h2>다음API 검색결과</h2>
+		  <h5 id="daumResult"></h5>
+		  <div style="height:200px; overflow-y:auto;">
+			  <table class="w3-table-all" id="daumResultTable">
+			  </table>
+		  </div>
+		</div>
+	</div>
+</body>
+</html>
